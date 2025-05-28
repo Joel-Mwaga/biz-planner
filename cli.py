@@ -1,6 +1,7 @@
 from database import SessionLocal, engine
 from models import Base, Business, Resource, Category
 from utils import print_header, input_float
+from tabulate import tabulate
 import csv
 
 def initialize_database():
@@ -155,16 +156,46 @@ def validate_budgets():
 def export_to_csv():
     session = SessionLocal()
     businesses = session.query(Business).all()
+    if not businesses:
+        print("No businesses found.")
+        session.close()
+        return
+    print("Businesses:")
+    for b in businesses:
+        print(f"{b.id}: {b.name}")
+    try:
+        business_id = int(input("Enter the business ID to export: "))
+    except ValueError:
+        print("Invalid input.")
+        session.close()
+        return
+    business = session.query(Business).get(business_id)
+    if not business:
+        print("Business not found.")
+        session.close()
+        return
+
+    headers = ['Business', 'Total Budget', 'Description', 'Resource', 'Resource Budget', 'Resource Description', 'Category']
+    rows = []
+    if business.resources:
+        for r in business.resources:
+            rows.append([
+                business.name, business.total_budget, business.description or "",
+                r.name, r.budget, r.description or "", r.category.name if r.category else ""
+            ])
+    else:
+        # Add a row with just the business info if no resources
+        rows.append([
+            business.name, business.total_budget, business.description or "",
+            "", "", "", ""
+        ])
+
     with open('business_plan.csv', 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow(['Business', 'Total Budget', 'Description', 'Resource', 'Resource Budget', 'Resource Description', 'Category'])
-        for b in businesses:
-            for r in b.resources:
-                writer.writerow([
-                    b.name, b.total_budget, b.description,
-                    r.name, r.budget, r.description, r.category.name
-                ])
-    print("Exported to business_plan.csv")
+        writer.writerow(headers)
+        writer.writerows(rows)
+    print("Exported to business_plan.csv\n")
+    print(tabulate(rows, headers=headers, tablefmt="grid"))
     session.close()
 
 def main_menu():
