@@ -232,7 +232,7 @@ def main_menu():
         elif choice == '9':
             export_to_csv()
         elif choice == '0':
-            print("Goodbye!")
+            print("Thank you for using BizPlanner CLI!")
             break
         else:
             print("Invalid choice. Try again.")
