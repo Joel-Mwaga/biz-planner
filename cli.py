@@ -74,3 +74,6 @@ def main_menu():
             break
         else:
             print("Invalid choice. Try again.")
+
+if __name__ == "__main__":
+    main_menu()
