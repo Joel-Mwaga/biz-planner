@@ -109,7 +109,8 @@ def edit_resource():
         return
     print("Resources:")
     for r in resources:
-        print(f"{r.id}: {r.name} (Business: {r.business.name})")
+        business_name = r.business.name if r.business else "N/A"
+        print(f"{r.id}: {r.name} (Business: {business_name})")
     resource_id = int(input("Enter resource ID to edit: "))
     resource = session.query(Resource).get(resource_id)
     if not resource:
@@ -132,7 +133,8 @@ def delete_resource():
         return
     print("Resources:")
     for r in resources:
-        print(f"{r.id}: {r.name} (Business: {r.business.name})")
+        business_name = r.business.name if r.business else "N/A"
+        print(f"{r.id}: {r.name} (Business: {business_name})")
     resource_id = int(input("Enter resource ID to delete: "))
     resource = session.query(Resource).get(resource_id)
     if not resource:
@@ -147,10 +149,14 @@ def delete_resource():
 def validate_budgets():
     session = SessionLocal()
     businesses = session.query(Business).all()
+    any_error = False
     for b in businesses:
         total_resource_budget = sum(r.budget for r in b.resources)
         if b.total_budget < total_resource_budget:
             print(f"Budget Error: Business '{b.name}' has total budget {b.total_budget} but resources sum to {total_resource_budget}")
+            any_error = True
+    if not any_error:
+        print("All business budgets are valid!")
     session.close()
 
 def export_to_csv():
@@ -184,7 +190,7 @@ def export_to_csv():
                 r.name, r.budget, r.description or "", r.category.name if r.category else ""
             ])
     else:
-        # Add a row with just the business info if no resources
+        
         rows.append([
             business.name, business.total_budget, business.description or "",
             "", "", "", ""
