@@ -3,6 +3,7 @@ from models import Base, Business, Resource, Category
 from utils import print_header, input_float
 from tabulate import tabulate
 import csv
+from prettytable import PrettyTable
 
 def initialize_database():
     Base.metadata.create_all(bind=engine)
@@ -48,12 +49,20 @@ def add_resource():
 def view_businesses():
     session = SessionLocal()
     businesses = session.query(Business).all()
+    table = PrettyTable(['Business', 'Total Budget', 'Description', 'Resource', 'Resource Budget', 'Resource Description', 'Category'])
     for b in businesses:
-        print_header(f"{b.id}: {b.name}")
-        print(f"Total Budget: {b.total_budget}")
-        print(f"Description: {b.description}")
-        for r in b.resources:
-            print(f"  - {r.name} (${r.budget}) [{r.category.name}]")
+        if b.resources:
+            for r in b.resources:
+                table.add_row([
+                    b.name, b.total_budget, b.description or "",
+                    r.name, r.budget, r.description or "", r.category.name if r.category else ""
+                ])
+        else:
+            table.add_row([
+                b.name, b.total_budget, b.description or "",
+                "", "", "", ""
+            ])
+    print(table)
     session.close()
 
 def edit_business():
